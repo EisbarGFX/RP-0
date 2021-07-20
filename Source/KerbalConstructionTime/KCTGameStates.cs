@@ -23,7 +23,7 @@ namespace KerbalConstructionTime
         public static int MiscellaneousTempUpgrades = 0, LastKnownTechCount = 0;
         public static int UpgradesResetCounter = 0;
         public static BuildListVessel LaunchedVessel, EditedVessel, RecoveredVessel;
-        public static List<CrewedPart> LaunchedCrew = new List<CrewedPart>();
+        public static List<PartCrewAssignment> LaunchedCrew = new List<PartCrewAssignment>();
 
         public static ToolbarControl ToolbarControl;
 
@@ -101,25 +101,6 @@ namespace KerbalConstructionTime
         public static void ClearLaunchpadList()
         {
             ActiveKSC.LaunchPads.Clear();
-        }
-    }
-
-    public class CrewedPart
-    {
-        public List<ProtoCrewMember> CrewList { get; set; }
-        public uint PartID { get; set; }
-
-        public CrewedPart(uint ID, List<ProtoCrewMember> crew)
-        {
-            PartID = ID;
-            CrewList = crew;
-        }
-
-        public CrewedPart FromPart(Part part, List<ProtoCrewMember> crew)
-        {
-            PartID = part.flightID;
-            CrewList = crew;
-            return this;
         }
     }
 }

@@ -234,42 +234,42 @@ namespace KerbalConstructionTime
                 foreach (Part p in FlightGlobals.ActiveVessel.parts)
                 {
                     KCTDebug.Log("Part being tested: " + p.partInfo.title);
-                    if (!(KCTGameStates.LaunchedCrew.Find(part => part.PartID == p.craftID) is CrewedPart cp))
+                    if (!(KCTGameStates.LaunchedCrew.Find(part => part.PartID == p.craftID) is PartCrewAssignment cp))
                         continue;
-                    List<ProtoCrewMember> crewList = cp.CrewList;
+                    List<CrewMemberAssignment> crewList = cp.CrewList;
                     KCTDebug.Log("cP.crewList.Count: " + cp.CrewList.Count);
-                    foreach (ProtoCrewMember crewMember in crewList)
+                    foreach (CrewMemberAssignment assign in crewList)
                     {
-                        if (crewMember != null)     // Can this list can have null ProtoCrewMembers?
+                        ProtoCrewMember crewMember = assign.PCM;
+                        if (crewMember == null) continue;
+
+                        ProtoCrewMember finalCrewMember = crewMember;
+                        if (crewMember.type == ProtoCrewMember.KerbalType.Crew)
                         {
-                            ProtoCrewMember finalCrewMember = crewMember;
-                            if (crewMember.type == ProtoCrewMember.KerbalType.Crew)
+                            finalCrewMember = roster.Crew.FirstOrDefault(c => c.name == crewMember.name);
+                        }
+                        else if (crewMember.type == ProtoCrewMember.KerbalType.Tourist)
+                        {
+                            finalCrewMember = roster.Tourist.FirstOrDefault(c => c.name == crewMember.name);
+                        }
+                        try
+                        {
+                            if (finalCrewMember is ProtoCrewMember && p.AddCrewmember(finalCrewMember))
                             {
-                                finalCrewMember = roster.Crew.FirstOrDefault(c => c.name == crewMember.name);
+                                KCTDebug.Log($"Assigned {finalCrewMember.name } to {p.partInfo.name}");
+                                finalCrewMember.rosterStatus = ProtoCrewMember.RosterStatus.Assigned;
+                                finalCrewMember.seat?.SpawnCrew();
                             }
-                            else if (crewMember.type == ProtoCrewMember.KerbalType.Tourist)
+                            else
                             {
-                                finalCrewMember = roster.Tourist.FirstOrDefault(c => c.name == crewMember.name);
-                            }
-                            try
-                            {
-                                if (finalCrewMember is ProtoCrewMember && p.AddCrewmember(finalCrewMember))
-                                {
-                                    KCTDebug.Log($"Assigned {finalCrewMember.name } to {p.partInfo.name}");
-                                    finalCrewMember.rosterStatus = ProtoCrewMember.RosterStatus.Assigned;
-                                    finalCrewMember.seat?.SpawnCrew();
-                                }
-                                else
-                                {
-                                    KCTDebug.LogError($"Error when assigning {crewMember.name} to {p.partInfo.name}");
-                                    finalCrewMember.rosterStatus = ProtoCrewMember.RosterStatus.Available;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                KCTDebug.LogError($"Error when assigning {crewMember.name} to {p.partInfo.name}: {ex}");
+                                KCTDebug.LogError($"Error when assigning {crewMember.name} to {p.partInfo.name}");
                                 finalCrewMember.rosterStatus = ProtoCrewMember.RosterStatus.Available;
                             }
+                        }
+                        catch (Exception ex)
+                        {
+                            KCTDebug.LogError($"Error when assigning {crewMember.name} to {p.partInfo.name}: {ex}");
+                            finalCrewMember.rosterStatus = ProtoCrewMember.RosterStatus.Available;
                         }
                     }
                 }
